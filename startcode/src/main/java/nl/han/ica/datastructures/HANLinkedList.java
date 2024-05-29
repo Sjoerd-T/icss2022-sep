@@ -1,7 +1,9 @@
 package nl.han.ica.datastructures;
 
+import java.util.Iterator;
+
 public class HANLinkedList<T> implements IHANLinkedList<T> {
-    private Node<T> head;
+    private HANLinkedListNode<T> head;
     private int size;
 
     public HANLinkedList() {
@@ -9,21 +11,11 @@ public class HANLinkedList<T> implements IHANLinkedList<T> {
         this.size = 0;
     }
 
-    private static class Node<T> {
-        T data;
-        Node<T> next;
-
-        Node(T data) {
-            this.data = data;
-            this.next = null;
-        }
-    }
-
     @Override
     public void addFirst(T value) {
-        Node<T> newNode = new Node<>(value);
-        newNode.next = head;
-        head = newNode;
+        HANLinkedListNode<T> newHANLinkedListNode = new HANLinkedListNode<>(value);
+        newHANLinkedListNode.next = head;
+        head = newHANLinkedListNode;
         size++;
     }
 
@@ -41,13 +33,13 @@ public class HANLinkedList<T> implements IHANLinkedList<T> {
         if (index == 0) {
             addFirst(value);
         } else {
-            Node<T> newNode = new Node<>(value);
-            Node<T> current = head;
+            HANLinkedListNode<T> newHANLinkedListNode = new HANLinkedListNode<>(value);
+            HANLinkedListNode<T> current = head;
             for (int i = 0; i < index - 1; i++) {
                 current = current.next;
             }
-            newNode.next = current.next;
-            current.next = newNode;
+            newHANLinkedListNode.next = current.next;
+            current.next = newHANLinkedListNode;
             size++;
         }
     }
@@ -60,7 +52,7 @@ public class HANLinkedList<T> implements IHANLinkedList<T> {
         if (pos == 0) {
             removeFirst();
         } else {
-            Node<T> current = head;
+            HANLinkedListNode<T> current = head;
             for (int i = 0; i < pos - 1; i++) {
                 current = current.next;
             }
@@ -74,7 +66,7 @@ public class HANLinkedList<T> implements IHANLinkedList<T> {
         if (pos < 0 || pos >= size) {
             throw new IndexOutOfBoundsException("Index is out of bounds");
         }
-        Node<T> current = head;
+        HANLinkedListNode<T> current = head;
         for (int i = 0; i < pos; i++) {
             current = current.next;
         }
@@ -100,5 +92,10 @@ public class HANLinkedList<T> implements IHANLinkedList<T> {
     @Override
     public int getSize() {
         return size;
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new HANLinkedListIterator<>(head);
     }
 }

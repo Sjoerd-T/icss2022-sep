@@ -1,6 +1,9 @@
 package nl.han.ica.datastructures;
 
-public interface IHANLinkedList<T> {
+import java.util.Iterator;
+
+public interface IHANLinkedList<T> extends Iterable<T>
+{
     /**
      * Adds value to the front of the list
      * @param value generic value to be added
@@ -26,7 +29,7 @@ public interface IHANLinkedList<T> {
     void delete(int pos);
 
     /**
-     * Returns generic value T at postion
+     * Returns generic value T at position
      * @param pos position to look up value
      * @return value at position pos
      */
