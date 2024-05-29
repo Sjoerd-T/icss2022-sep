@@ -77,7 +77,7 @@ public class ASTListener extends ICSSBaseListener
     @Override
     public void exitClassSelector(ICSSParser.ClassSelectorContext ctx)
     {
-        ClassSelector classSelector = (ClassSelector)currentContainer.pop();
+        ClassSelector classSelector = (ClassSelector) currentContainer.pop();
         currentContainer.peek().addChild(classSelector);
     }
 
@@ -105,7 +105,7 @@ public class ASTListener extends ICSSBaseListener
     @Override
     public void exitTagSelector(ICSSParser.TagSelectorContext ctx)
     {
-        TagSelector tagSelector = (TagSelector)currentContainer.pop();
+        TagSelector tagSelector = (TagSelector) currentContainer.pop();
         currentContainer.peek().addChild(tagSelector);
     }
 
@@ -137,61 +137,71 @@ public class ASTListener extends ICSSBaseListener
     }
 
     @Override
-    public void enterColorLiteral(ICSSParser.ColorLiteralContext ctx) {
+    public void enterColorLiteral(ICSSParser.ColorLiteralContext ctx)
+    {
         ColorLiteral colorLiteral = new ColorLiteral(ctx.getText());
         currentContainer.push(colorLiteral);
     }
 
     @Override
-    public void exitColorLiteral(ICSSParser.ColorLiteralContext ctx) {
+    public void exitColorLiteral(ICSSParser.ColorLiteralContext ctx)
+    {
         ColorLiteral colorLiteral = (ColorLiteral) currentContainer.pop();
         currentContainer.peek().addChild(colorLiteral);
     }
 
     @Override
-    public void enterPixelLiteral(ICSSParser.PixelLiteralContext ctx) {
+    public void enterPixelLiteral(ICSSParser.PixelLiteralContext ctx)
+    {
         PixelLiteral pixelLiteral = new PixelLiteral(ctx.getText());
         currentContainer.push(pixelLiteral);
     }
 
     @Override
-    public void exitPixelLiteral(ICSSParser.PixelLiteralContext ctx) {
+    public void exitPixelLiteral(ICSSParser.PixelLiteralContext ctx)
+    {
         PixelLiteral pixelLiteral = (PixelLiteral) currentContainer.pop();
         currentContainer.peek().addChild(pixelLiteral);
     }
 
     @Override
-    public void enterPercentageLiteral(ICSSParser.PercentageLiteralContext ctx) {
+    public void enterPercentageLiteral(ICSSParser.PercentageLiteralContext ctx)
+    {
         PercentageLiteral percentageLiteral = new PercentageLiteral(ctx.getText());
         currentContainer.push(percentageLiteral);
     }
 
     @Override
-    public void exitPercentageLiteral(ICSSParser.PercentageLiteralContext ctx) {
+    public void exitPercentageLiteral(ICSSParser.PercentageLiteralContext ctx)
+    {
         PercentageLiteral percentageLiteral = (PercentageLiteral) currentContainer.pop();
         currentContainer.peek().addChild(percentageLiteral);
     }
 
     @Override
-    public void enterScalarLiteral(ICSSParser.ScalarLiteralContext ctx) {
+    public void enterScalarLiteral(ICSSParser.ScalarLiteralContext ctx)
+    {
         ScalarLiteral scalarLiteral = new ScalarLiteral(ctx.getText());
         currentContainer.push(scalarLiteral);
     }
 
     @Override
-    public void exitScalarLiteral(ICSSParser.ScalarLiteralContext ctx) {
+    public void exitScalarLiteral(ICSSParser.ScalarLiteralContext ctx)
+    {
         ScalarLiteral scalarLiteral = (ScalarLiteral) currentContainer.pop();
         currentContainer.peek().addChild(scalarLiteral);
     }
 
     @Override
-    public void enterBoolLiteral(ICSSParser.BoolLiteralContext ctx) {
+    public void enterBoolLiteral(ICSSParser.BoolLiteralContext ctx)
+    {
         BoolLiteral boolLiteral = new BoolLiteral(ctx.getText());
         currentContainer.push(boolLiteral);
     }
 
     @Override
-    public void exitBoolLiteral(ICSSParser.BoolLiteralContext ctx) {
+    public void exitBoolLiteral(ICSSParser.BoolLiteralContext ctx)
+    {
         BoolLiteral boolLiteral = (BoolLiteral) currentContainer.pop();
         currentContainer.peek().addChild(boolLiteral);
     }
@@ -226,21 +236,62 @@ public class ASTListener extends ICSSBaseListener
     @Override
     public void enterIfClause(ICSSParser.IfClauseContext ctx)
     {
+        currentContainer.push(new IfClause());
     }
 
     @Override
     public void exitIfClause(ICSSParser.IfClauseContext ctx)
     {
+        IfClause ifClause = (IfClause) currentContainer.pop();
+        currentContainer.peek().addChild(ifClause);
     }
 
     @Override
     public void enterElseClause(ICSSParser.ElseClauseContext ctx)
     {
+        currentContainer.push(new ElseClause());
     }
 
     @Override
     public void exitElseClause(ICSSParser.ElseClauseContext ctx)
     {
+        ElseClause elseClause = (ElseClause) currentContainer.pop();
+        currentContainer.peek().addChild(elseClause);
+    }
+
+    @Override
+    public void enterExpression(ICSSParser.ExpressionContext ctx)
+    {
+        // Check if the expression has exactly 3 children, if not then the expression is not valid.
+        if (ctx.getChildCount() != 3)
+        {
+            // Maybe add an error
+            return;
+        }
+
+        // Get the operation from the middle child, + - * for example
+        switch(ctx.getChild(1).getText())
+        {
+            case "+":
+                currentContainer.push(new AddOperation());
+                return;
+            case "-":
+                currentContainer.push(new SubtractOperation());
+                return;
+            case "*":
+                currentContainer.push(new MultiplyOperation());
+                return;
+        }
+    }
+
+    @Override
+    public void exitExpression(ICSSParser.ExpressionContext ctx)
+    {
+        if (ctx.getChildCount() != 3)
+            return;
+
+        ASTNode operation = currentContainer.pop();
+        currentContainer.peek().addChild(operation);
     }
 
     @Override
