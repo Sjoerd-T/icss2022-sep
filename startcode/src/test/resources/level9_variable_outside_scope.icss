@@ -1,0 +1,17 @@
+LinkColor := #ff0000;
+AdjustWidth := TRUE;
+UseLinkColor := FALSE;
+
+p {
+	if [AdjustWidth] {
+        WidthVar := 200px;
+    } else {
+        WidthVar := 250px;
+    }
+
+    width: WidthVar;
+}
+
+a {
+    width: WidthVar;
+}
