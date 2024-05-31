@@ -12,10 +12,17 @@ public class Generator
     // GE01: Generate CSS from AST
     public String generate(AST ast)
     {
-        return generateStylesheet(ast.root);
+        if (ast.root instanceof Stylesheet)
+        {
+            return generateStylesheet(ast.root);
+        }
+        else
+        {
+            throw new RuntimeException("First object in AST should be of type Stylesheet");
+        }
     }
 
-    private String generateStylesheet(ASTNode node)
+    private String generateStylesheet(Stylesheet node)
     {
         StringBuilder output = new StringBuilder();
 
@@ -23,16 +30,15 @@ public class Generator
         {
             if (child instanceof Stylerule)
             {
-                output.append(generateStylerule(child));
+                output.append(generateStylerule((Stylerule)child));
             }
         }
 
         return output.toString();
     }
 
-    private String generateStylerule(ASTNode node)
+    private String generateStylerule(Stylerule stylerule)
     {
-        Stylerule stylerule = (Stylerule) node;
         StringBuilder output = new StringBuilder();
 
         // Add all selectors, seperated by a comma and an enter
@@ -51,7 +57,7 @@ public class Generator
         {
             if (child instanceof Declaration)
             {
-                output.append(generateDeclaration(child));
+                output.append(generateDeclaration((Declaration)child));
             }
         }
 
@@ -59,9 +65,8 @@ public class Generator
         return output.toString();
     }
 
-    private String generateDeclaration(ASTNode node)
+    private String generateDeclaration(Declaration declaration)
     {
-        Declaration declaration = (Declaration) node;
         StringBuilder output = new StringBuilder();
 
         // GE02: Add 2 spaces per scope level.
@@ -69,15 +74,15 @@ public class Generator
 
         if (declaration.expression instanceof ColorLiteral)
         {
-            output.append(((ColorLiteral) declaration.expression).value + ";\n");
+            output.append(String.format("%s;\n", ((ColorLiteral) declaration.expression).value));
         }
         else if (declaration.expression instanceof PixelLiteral)
         {
-            output.append(((PixelLiteral) declaration.expression).value + "px;\n");
+            output.append(String.format("%spx;\n", ((PixelLiteral) declaration.expression).value));
         }
         else if (declaration.expression instanceof PercentageLiteral)
         {
-            output.append(((PercentageLiteral) declaration.expression).value + "%;\n");
+            output.append(String.format("%s%%;\n", ((PercentageLiteral) declaration.expression).value));
         }
 
         return output.toString();
