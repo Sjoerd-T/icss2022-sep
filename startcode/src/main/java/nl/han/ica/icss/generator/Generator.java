@@ -24,31 +24,35 @@ public class Generator
 
     private String generateStylesheet(Stylesheet node)
     {
+        // Create the StringBuilder here once, so we only have to do a toString once.
         StringBuilder output = new StringBuilder();
 
         for (ASTNode child : node.getChildren())
         {
             if (child instanceof Stylerule)
             {
-                output.append(generateStylerule((Stylerule)child));
+                generateStylerule(output, (Stylerule)child);
             }
         }
 
         return output.toString();
     }
 
-    private String generateStylerule(Stylerule stylerule)
+    private void generateStylerule(StringBuilder output, Stylerule stylerule)
     {
-        StringBuilder output = new StringBuilder();
-
-        // Add all selectors, seperated by a comma and an enter
+        // Add all selectors, separated by a comma and a newline
+        boolean addComma = false;
         for (Selector selector : stylerule.selectors)
         {
-            if (output.length() > 0)
+            if (addComma)
             {
                 output.append(",\n");
             }
+
             output.append(selector.toString());
+
+            // Only add commas on the second run
+            addComma = true;
         }
 
         output.append(" {\n");
@@ -57,18 +61,17 @@ public class Generator
         {
             if (child instanceof Declaration)
             {
-                output.append(generateDeclaration((Declaration)child));
+                generateDeclaration(output, (Declaration)child);
             }
         }
 
+        // Add two newlines so the next expression will not be directly beneath the current one
         output.append("}\n\n");
-        return output.toString();
+        // No need to return because the StringBuilder is reference type and the values are already added to the StringBuilder.
     }
 
-    private String generateDeclaration(Declaration declaration)
+    private void generateDeclaration(StringBuilder output, Declaration declaration)
     {
-        StringBuilder output = new StringBuilder();
-
         // GE02: Add 2 spaces per scope level.
         output.append(String.format("  %s: ", declaration.property.name));
 
@@ -84,8 +87,5 @@ public class Generator
         {
             output.append(String.format("%s%%;\n", ((PercentageLiteral) declaration.expression).value));
         }
-
-        return output.toString();
     }
-
 }

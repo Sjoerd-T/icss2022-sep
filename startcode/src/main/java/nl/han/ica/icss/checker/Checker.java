@@ -27,16 +27,15 @@ public class Checker
         }
         else
         {
-            throw new RuntimeException("First object in AST should be of type Stylesheet");
+            throw new RuntimeException("First object in AST must be of type 'Stylesheet'");
         }
     }
 
     private void checkStylesheet(Stylesheet stylesheet)
     {
-        // Add new scope
+        // add scope
         variableTypes.addFirst(new HashMap<>());
 
-        // Check all children
         for (ASTNode child : stylesheet.getChildren())
         {
             if (child instanceof VariableAssignment)
@@ -53,21 +52,19 @@ public class Checker
             }
         }
 
-        // Remove scope
+        // remove Scope
         variableTypes.removeFirst();
     }
 
     private void checkVariableAssignment(VariableAssignment variableAssignment)
     {
-        // Make variable type available in current scope
+        // variableAssignment.name is of type VariableReference,
+        // so variableAssignment.name.name gets the name out of the VariableReference
         variableTypes.getFirst().put(variableAssignment.name.name, checkExpressionType(variableAssignment.expression));
     }
 
     private void checkStyleRule(Stylerule stylerule)
     {
-        // Add new scope
-        variableTypes.addFirst(new HashMap<>());
-
         // Check all children
         for (ASTNode child : stylerule.body)
         {
@@ -77,7 +74,7 @@ public class Checker
             }
             else if (child instanceof IfClause)
             {
-                checkIfClause((IfClause)child);
+                checkIfClause((IfClause) child);
             }
             else if (child instanceof VariableAssignment)
             {
@@ -92,9 +89,6 @@ public class Checker
                 child.setError("Style rule can only contain declarations, if clauses and variable assignments");
             }
         }
-
-        // Remove scope
-        variableTypes.removeFirst();
     }
 
     private void checkDeclaration(Declaration declaration)
@@ -147,31 +141,33 @@ public class Checker
 
     private ExpressionType checkExpressionType(Expression expression)
     {
+        // Else if-statement is not necessary here, when an if-statement is hit it will return
+        // so the rest of the code will not be touched after the if-statement
         if (expression instanceof VariableReference)
         {
-            return checkVariableReferenceType((VariableReference)expression);
+            return checkVariableReferenceType((VariableReference) expression);
         }
-        else if (expression instanceof Operation)
+        if (expression instanceof Operation)
         {
-            return checkOperationType((Operation)expression);
+            return checkOperationType((Operation) expression);
         }
-        else if (expression instanceof ColorLiteral)
+        if (expression instanceof ColorLiteral)
         {
             return ExpressionType.COLOR;
         }
-        else if (expression instanceof PixelLiteral)
+        if (expression instanceof PixelLiteral)
         {
             return ExpressionType.PIXEL;
         }
-        else if (expression instanceof PercentageLiteral)
+        if (expression instanceof PercentageLiteral)
         {
             return ExpressionType.PERCENTAGE;
         }
-        else if (expression instanceof ScalarLiteral)
+        if (expression instanceof ScalarLiteral)
         {
             return ExpressionType.SCALAR;
         }
-        else if (expression instanceof BoolLiteral)
+        if (expression instanceof BoolLiteral)
         {
             return ExpressionType.BOOL;
         }
@@ -182,7 +178,7 @@ public class Checker
 
     private ExpressionType checkVariableReferenceType(VariableReference variableReference)
     {
-        // Return type if found in scope
+        // Walk through all variableTypes and try to find this variable
         for (HashMap<String, ExpressionType> scope : variableTypes)
         {
             if (scope.containsKey(variableReference.name))
@@ -207,12 +203,12 @@ public class Checker
         {
             if (checkVariableReferenceType((VariableReference) ifClause.conditionalExpression) != ExpressionType.BOOL)
             {
-                ifClause.conditionalExpression.setError("If clause can only contain boolean expressions");
+                ifClause.conditionalExpression.setError("The if clause can only be of type boolean");
             }
         }
         else if (!(ifClause.conditionalExpression instanceof BoolLiteral))
         {
-            ifClause.conditionalExpression.setError("If clause can only contain boolean expressions");
+            ifClause.conditionalExpression.setError("The if clause can only be of type boolean");
         }
 
         // Check all children
@@ -228,11 +224,11 @@ public class Checker
             }
             else if (child instanceof IfClause)
             {
-                checkIfClause((IfClause)child);
+                checkIfClause((IfClause) child);
             }
             else if (child instanceof ElseClause)
             {
-                checkElseClause((ElseClause)child);
+                checkElseClause((ElseClause) child);
             }
             else
             {
@@ -262,7 +258,7 @@ public class Checker
             }
             else if (child instanceof IfClause)
             {
-                checkIfClause((IfClause)child);
+                checkIfClause((IfClause) child);
             }
             else
             {
@@ -294,21 +290,19 @@ public class Checker
 
         if (operation instanceof AddOperation)
         {
-            return checkAddOperationType((AddOperation)operation);
+            return checkAddOperationType((AddOperation) operation);
         }
-        else if (operation instanceof SubtractOperation)
+        if (operation instanceof SubtractOperation)
         {
-            return checkSubtractOperationType((SubtractOperation)operation);
+            return checkSubtractOperationType((SubtractOperation) operation);
         }
-        else if (operation instanceof MultiplyOperation)
+        if (operation instanceof MultiplyOperation)
         {
-            return checkMultiplyOperationType((MultiplyOperation)operation);
+            return checkMultiplyOperationType((MultiplyOperation) operation);
         }
-        else
-        {
-            operation.setError("Unknown operation type");
-            return ExpressionType.UNDEFINED;
-        }
+
+        operation.setError(String.format("Operation type '%s' is not supported.", operation.getClass().getName()));
+        return ExpressionType.UNDEFINED;
     }
 
     private ExpressionType checkAddOperationType(AddOperation addOperation)
@@ -321,11 +315,9 @@ public class Checker
         {
             return leftType;
         }
-        else
-        {
-            addOperation.setError("Add operation can only be used with expressions of the same type");
-            return ExpressionType.UNDEFINED;
-        }
+
+        addOperation.setError("Add operation can only be used with expressions of the same type");
+        return ExpressionType.UNDEFINED;
     }
 
     private ExpressionType checkSubtractOperationType(SubtractOperation subtractOperation)
@@ -338,11 +330,9 @@ public class Checker
         {
             return leftType;
         }
-        else
-        {
-            subtractOperation.setError("Subtract operation can only be used with expressions of the same type");
-            return ExpressionType.UNDEFINED;
-        }
+
+        subtractOperation.setError("Subtract operation can only be used with expressions of the same type");
+        return ExpressionType.UNDEFINED;
     }
 
     private ExpressionType checkMultiplyOperationType(MultiplyOperation multiplyOperation)
@@ -358,14 +348,7 @@ public class Checker
             return ExpressionType.UNDEFINED;
         }
 
-        if (leftType == ExpressionType.SCALAR)
-        {
-            return rightType;
-        }
-        else
-        {
-            return leftType;
-        }
+        return leftType == ExpressionType.SCALAR ? rightType : leftType;
     }
 
 }

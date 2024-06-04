@@ -101,7 +101,7 @@ class ParserTest
     }
 
     @Test
-    void testParseLevel4() throws IOException
+    void Checker_UnknownVariable_shouldReturnErrorMessage() throws IOException
     {
         AST sut = parseTestFile("level4_unknown_variable.icss");
         (new Checker()).check(sut);
@@ -111,7 +111,7 @@ class ParserTest
     }
 
     @Test
-    void testParseLevel5() throws IOException
+    void Checker_MultiplyPixels_shouldReturnErrorMessage() throws IOException
     {
         AST sut = parseTestFile("level5_CH02_calculate_with_pixels.icss");
         (new Checker()).check(sut);
@@ -122,7 +122,7 @@ class ParserTest
 
     @ParameterizedTest
     @ValueSource(strings = {"level6_CH03_multiply_color.icss", "level6_CH03_subtract_color.icss", "level6_CH03_add_color.icss"})
-    void testParseLevel6(String icssFile) throws IOException
+    void Checker_CalculateWithColors_ShouldReturnErrorMessage(String icssFile) throws IOException
     {
         AST sut = parseTestFile(icssFile);
         (new Checker()).check(sut);
@@ -133,7 +133,7 @@ class ParserTest
 
     @ParameterizedTest
     @ValueSource(strings = {"level7_CH04_color_with_percentage_value.icss", "level7_CH04_color_with_pixel_value.icss"})
-    void testParseLevel7_color(String icssFile) throws IOException
+    void Checker_ColorPropertyWithIncorrectLiteral_ShouldReturnTwoErrorMessages(String icssFile) throws IOException
     {
         AST sut = parseTestFile(icssFile);
         (new Checker()).check(sut);
@@ -144,7 +144,7 @@ class ParserTest
     }
 
     @Test
-    void testParseLevel7_width() throws IOException
+    void Checker_WidthWithHexColorValue_ShouldReturnTwoErrorMessages() throws IOException
     {
         AST sut = parseTestFile("level7_CH04_width_with_color_value.icss");
         (new Checker()).check(sut);
@@ -155,17 +155,17 @@ class ParserTest
     }
 
     @Test
-    void testParseLevel8() throws IOException
+    void Checker_IfStatementWithNonBooleanClause_ShouldReturnErrorMessage() throws IOException
     {
         AST sut = parseTestFile("level8_ifstatement_boolean_variable.icss");
         (new Checker()).check(sut);
 
         assertEquals(1, sut.getErrors().size());
-        assertEquals("ERROR: If clause can only contain boolean expressions", sut.getErrors().get(0).toString());
+        assertEquals("ERROR: The if clause can only be of type boolean", sut.getErrors().get(0).toString());
     }
 
     @Test
-    void testParseLevel9() throws IOException
+    void Checker_UseVariableThatIsNotInScope_ShouldReturnErrorMessage() throws IOException
     {
         AST sut = parseTestFile("level9_variable_outside_scope.icss");
         (new Checker()).check(sut);
@@ -176,7 +176,7 @@ class ParserTest
     }
 
     @Test
-    void testParseLevel10() throws IOException
+    void Evaluator_Apply_ASTShouldNotContainIfElseOrExpressionClasses() throws IOException
     {
         AST sut = parseTestFile("level3.icss");
         (new Evaluator()).apply(sut);
@@ -185,7 +185,7 @@ class ParserTest
     }
 
     @Test
-    void testParseLevel11() throws IOException
+    void Generator_Generate_ShouldGenerateSameAsExpectedCss() throws IOException
     {
         AST sut = parseTestFile("level0.icss");
         String css = (new Generator()).generate(sut);

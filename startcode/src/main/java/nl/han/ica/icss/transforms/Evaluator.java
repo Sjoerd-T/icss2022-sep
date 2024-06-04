@@ -40,16 +40,16 @@ public class Evaluator implements Transform
         {
             if (child instanceof Stylerule)
             {
-                evaluateStylerule(child);
+                evaluateStylerule((Stylerule) child);
             }
             else if (child instanceof VariableAssignment)
             {
-                evaluateVariableAssignment(child);
+                evaluateVariableAssignment((VariableAssignment) child);
                 nodesToRemove.add(child);
             }
         }
 
-        // Remove variable assignments because they aren't needed anymore
+        // Remove all children from nodesToRemove, they are repl
         for (ASTNode child : nodesToRemove)
         {
             node.removeChild(child);
@@ -59,12 +59,10 @@ public class Evaluator implements Transform
         variableValues.removeFirst();
     }
 
-    private void evaluateStylerule(ASTNode node)
+    private void evaluateStylerule(Stylerule stylerule)
     {
         // Add new scope
         variableValues.addFirst(new HashMap<>());
-
-        Stylerule stylerule = (Stylerule) node;
         evaluateStyleruleBody(stylerule.body);
 
         // Remove scope
@@ -79,67 +77,66 @@ public class Evaluator implements Transform
         {
             if (child instanceof Declaration)
             {
-                evaluateDeclaration(child);
+                evaluateDeclaration((Declaration) child);
             }
             else if (child instanceof IfClause)
             {
-                nodesToAdd.addAll(evaluateIfClause(child));
+                nodesToAdd.addAll(evaluateIfClause((IfClause) child));
                 nodesToRemove.add(child);
             }
             else if (child instanceof VariableAssignment)
             {
-                evaluateVariableAssignment(child);
+                evaluateVariableAssignment((VariableAssignment) child);
                 nodesToRemove.add(child);
             }
         }
 
-        // Remove if clauses and variable assignments because they aren't needed anymore
-        // This is done AFTER the evaluation because concurrent modification of the list
-        // is not allowed and will throw an exception. This is possible because nodes is
-        // a reference.
+        // Remove all the nodes that are not needed anymore
         for (ASTNode node : nodesToRemove)
         {
             nodes.remove(node);
         }
 
-        // Add if clause bodies to stylerule body
+        // Add if-clause bodies to stylerule body
         nodes.addAll(nodesToAdd);
     }
 
-    private void evaluateDeclaration(ASTNode node)
+    private void evaluateDeclaration(Declaration declaration)
     {
-        Declaration declaration = (Declaration) node;
         declaration.expression = evaluateExpression(declaration.expression);
     }
 
     // TR02: Evaluate if clauses
-    private ArrayList<ASTNode> evaluateIfClause(ASTNode node)
+    private ArrayList<ASTNode> evaluateIfClause(IfClause ifClause)
     {
-        IfClause ifClause = (IfClause) node;
+        if (ifClause == null || ifClause.conditionalExpression == null)
+        {
+            // Preferable throw an exception because the outcome can be different from what someone expect.
+            return new ArrayList<>();
+        }
 
         // Evaluate condition
         boolean ifClauseIsTrue = ((BoolLiteral) evaluateExpression(ifClause.conditionalExpression)).value;
 
         if (ifClauseIsTrue)
         {
-            // Evaluate body of if clause
+            // Evaluate body of if-clause
             evaluateStyleruleBody(ifClause.body);
             return ifClause.body;
         }
-        else
+
+        if (ifClause.elseClause == null)
         {
-            if (ifClause.elseClause == null)
-                return new ArrayList<>();
-            // Evaluate body of else clause
-            evaluateStyleruleBody(ifClause.elseClause.body);
-            return ifClause.elseClause.body;
+            return new ArrayList<>();
         }
 
+        // Evaluate body of else clause
+        evaluateStyleruleBody(ifClause.elseClause.body);
+        return ifClause.elseClause.body;
     }
 
-    private void evaluateVariableAssignment(ASTNode node)
+    private void evaluateVariableAssignment(VariableAssignment variableAssignment)
     {
-        VariableAssignment variableAssignment = (VariableAssignment) node;
         // Make value of variable available in current scope
         variableValues.getFirst().put(variableAssignment.name.name, evaluateExpression(variableAssignment.expression));
     }
@@ -149,26 +146,22 @@ public class Evaluator implements Transform
     {
         if (node instanceof VariableReference)
         {
-            return evaluateVariableReference(node);
+            return evaluateVariableReference((VariableReference) node);
         }
         else if (node instanceof Operation)
         {
-            return evaluateOperation(node);
+            return evaluateOperation((Operation) node);
         }
         else if (node instanceof Literal)
         {
             return (Literal) node;
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
-    private Literal evaluateVariableReference(ASTNode node)
+    private Literal evaluateVariableReference(VariableReference variableReference)
     {
-        VariableReference variableReference = (VariableReference) node;
-
         // Find variable value
         for (HashMap<String, Literal> scope : variableValues)
         {
@@ -181,28 +174,25 @@ public class Evaluator implements Transform
         return null;
     }
 
-    private Literal evaluateOperation(ASTNode node)
+    private Literal evaluateOperation(Operation operation)
     {
-        Operation operation = (Operation) node;
         Literal left = evaluateExpression(operation.lhs);
         Literal right = evaluateExpression(operation.rhs);
 
-        if (node instanceof AddOperation)
+        if (operation instanceof AddOperation)
         {
             return evaluateAddOperation(left, right);
         }
-        else if (node instanceof SubtractOperation)
+        else if (operation instanceof SubtractOperation)
         {
             return evaluateSubtractOperation(left, right);
         }
-        else if (node instanceof MultiplyOperation)
+        else if (operation instanceof MultiplyOperation)
         {
             return evaluateMultiplyOperation(left, right);
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
     private Literal evaluateAddOperation(Literal left, Literal right)
@@ -219,10 +209,8 @@ public class Evaluator implements Transform
         {
             return new ScalarLiteral(((ScalarLiteral) left).value + ((ScalarLiteral) right).value);
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
     private Literal evaluateSubtractOperation(Literal left, Literal right)
@@ -239,10 +227,8 @@ public class Evaluator implements Transform
         {
             return new ScalarLiteral(((ScalarLiteral) left).value - ((ScalarLiteral) right).value);
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
     private Literal evaluateMultiplyOperation(Literal left, Literal right)
@@ -259,11 +245,7 @@ public class Evaluator implements Transform
         {
             return new ScalarLiteral(((ScalarLiteral) left).value * ((ScalarLiteral) right).value);
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
-
-
 }
